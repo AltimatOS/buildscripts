@@ -13,9 +13,9 @@ function compress_manpages {
     done
 }
 
-NAME=
-VERSION=
-SOURCE0="${NAME}-${VERSION}.tar."
+NAME=file
+VERSION=5.45
+SOURCE0="${NAME}-${VERSION}.tar.gz"
 SRC_DIR="${NAME}-${VERSION}"
 
 if [[ "$(pwd)" != "/srcs" ]]; then
@@ -26,9 +26,12 @@ fi
 tar xvf $SOURCE0
 
 pushd $SRC_DIR
+    ./configure --prefix=/System       \
+                --libdir=/System/lib64
+    make
+    make check
+    make install
 popd
-
-compress_manpages
 
 # clean up
 rm -rf $SRC_DIR

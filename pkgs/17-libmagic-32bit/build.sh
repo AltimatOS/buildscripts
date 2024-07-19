@@ -13,9 +13,9 @@ function compress_manpages {
     done
 }
 
-NAME=
-VERSION=
-SOURCE0="${NAME}-${VERSION}.tar."
+NAME=file
+VERSION=5.45
+SOURCE0="${NAME}-${VERSION}.tar.gz"
 SRC_DIR="${NAME}-${VERSION}"
 
 if [[ "$(pwd)" != "/srcs" ]]; then
@@ -26,9 +26,15 @@ fi
 tar xvf $SOURCE0
 
 pushd $SRC_DIR
+    CC="gcc -m32" ./configure    \
+        --prefix=/System         \
+        --libdir=/System/lib     \
+        --host=i686-pc-linux-gnu
+    make
+    make DESTDIR=$PWD/DESTDIR install
+    cp -Rv DESTDIR/System/lib/* /System/lib
+    rm -rf DESTDIR
 popd
-
-compress_manpages
 
 # clean up
 rm -rf $SRC_DIR
