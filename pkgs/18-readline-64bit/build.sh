@@ -34,7 +34,7 @@ pushd $SRC_DIR
     # apply patch
     patch -Np1 -i ../$PATCH0
     ./configure --prefix=/System                        \
-                --libdir=/System/lib                    \
+                --libdir=/System/lib64                  \
                 --with-curses                           \
                 --docdir=/System/share/doc/readline-8.2
     make SHLIB_LIBS="-lncursesw"
