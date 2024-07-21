@@ -30,7 +30,7 @@ pushd $SRC_DIR
     cd       build
 
     ../configure --prefix=/System                \
-                 --sysconfdir=/Systen/cfg        \
+                 --sysconfdir=/System/cfg        \
                  --enable-gold                   \
                  --enable-ld=default             \
                  --enable-plugins                \
