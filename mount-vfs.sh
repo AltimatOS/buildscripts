@@ -19,3 +19,6 @@ if [[ -h $LFS/dev/shm ]]; then
 else
     sudo mount -vt tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
 fi
+
+# mount our build scripts directory into the chroot
+sudo mount -v --bind $HOME/buildscripts $LFS/System/var/root/buildscripts
