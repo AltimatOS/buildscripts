@@ -1,0 +1,65 @@
+shopt -s expand_aliases
+
+DEBUG=
+if [[ "$DEBUG" -eq 1 ]]; then
+    set -x
+fi
+
+LPKG_NAME="part of the Linux Package (LPkg) suite"
+LPKG_VERSION="0.1"
+LPKG_LICENSE="Apache License, version 2.0"
+LPKG_COPYRIGHT="Copyright (C) 2014-2024 YggdrasilSoft, LLC."
+
+SET_NORMAL_MODE=0
+SET_BRIGHT_MODE=1
+SET_DIM_MODE=2
+SET_UNDERLINE_MODE=3
+SET_BLINK_MODE=5
+SET_REVERSE_MODE=7
+SET_HIDDEN_MODE=8
+
+SET_FG_COLOR_RED="\\033[$SET_BRIGHT_MODE;31m"
+SET_FG_COLOR_GREEN="\\033[$SET_BRIGHT_MODE;32m"
+SET_FG_COLOR_YELLOW="\\033[$SET_BRIGHT_MODE;33m"
+SET_FG_COLOR_BLUE="\\033[$SET_BRIGHT_MODE;34m"
+SET_FG_COLOR_MAGENTA="\\033[$SET_BRIGHT_MODE;35m"
+SET_FG_COLOR_CYAN="\\033[$SET_BRIGHT_MODE;36m"
+SET_FG_COLOR_WHITE="\\033[$SET_BRIGHT_MODE;37m"
+SET_FG_COLOR_WHITE_WITH_RED_BG="\\033[41m\\033[$SET_BRIGHT_MODE;37m"
+SET_COLOR_NORMAL="\\033[$SET_NORMAL_MODE;39m"
+
+function print {
+    echo -n "$1"
+}
+
+function say {
+    echo "$1"
+}
+
+function print_green() {
+    echo -en "${SET_FG_COLOR_GREEN}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_cyan() {
+    echo -en "${SET_FG_COLOR_CYAN}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_error() {
+    echo -en "${SET_FG_COLOR_WHITE_WITH_RED_BG}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_red() {
+    echo -en "${SET_FG_COLOR_RED}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_blue() {
+    echo -en "${SET_FG_COLOR_BLUE}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_yellow() {
+    echo -en "${SET_FG_COLOR_YELLOW}${1}${SET_COLOR_NORMAL}"
+}
+
+function print_white() {
+    echo -en "${SET_FG_COLOR_WHITE}${1}${SET_COLOR_NORMAL}"
+}
