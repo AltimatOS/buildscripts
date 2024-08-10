@@ -5,6 +5,9 @@ if [[ "$DEBUG" -eq 1 ]]; then
     set -x
 fi
 
+# needed for later
+BUILD_STAGE=
+
 LPKG_NAME="part of the Linux Package (LPkg) suite"
 LPKG_VERSION="0.1"
 LPKG_LICENSE="Apache License, version 2.0"
@@ -27,6 +30,140 @@ SET_FG_COLOR_CYAN="\\033[$SET_BRIGHT_MODE;36m"
 SET_FG_COLOR_WHITE="\\033[$SET_BRIGHT_MODE;37m"
 SET_FG_COLOR_WHITE_WITH_RED_BG="\\033[41m\\033[$SET_BRIGHT_MODE;37m"
 SET_COLOR_NORMAL="\\033[$SET_NORMAL_MODE;39m"
+
+# _PACKAGE_METADATA_TMPFILE=$(mktemp)
+# _PACKAGE_TRIGGERS_TMPFILE=$(mktemp)
+# _PACKAGE_SCRIPTLETS_TMPFILE=$(mktemp)
+# _PACKAGE_FILE_LISTS_TMPFILE=$(mktemp)
+
+function get_metadata_section {
+    local file=${1}
+
+    cat $file | grep --color=never -v '#' | sed -n '/^PkgMetadata {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_prep_section {
+    local file=${1}
+
+    cat $file | grep -v '#'| sed -n '/^Prepare {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_configure_section {
+    local file=${1}
+
+    cat $file | grep -v '#'| sed -n '/^Configure {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_build_section {
+    local file=${1}
+
+    cat $file | grep -v '#'| sed -n '/^Build {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_check_section {
+    local file=${1}
+
+    cat $file | grep -v '#'| sed -n '/^Check {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_install_section {
+    local file=${1}
+
+    cat $file | grep -v '#'| sed -n '/^Install {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_pkgname {
+    local file=${1}
+
+    get_metadata_section $file | yq .Name -o json | jq -r
+}
+
+function get_pkgversion {
+    local file=${1}
+
+    get_metadata_section $file | yq .Version -o json | jq -r
+}
+
+function get_srcurl {
+    local file=${1}
+
+    local name=$(get_pkgname $file)
+    local version=$(get_pkgversion $file)
+    local url=$(get_metadata_section $file | yq .Url -o json | jq -r)
+
+    # hackery to get it to substitute the variables used
+    eval echo $url
+}
+
+function get_srcs {
+    local file=${1}
+
+    local name=$(get_pkgname $file)
+    local version=$(get_pkgversion $file)
+
+    local srcs
+    typeset -a srcs
+
+    eval echo $(get_metadata_section $file | yq .Sources -o json | jq -r '.[]')
+}
+
+function get_pkg_requires {
+    local file=${1}
+
+    get_metadata_section $file | yq .Requires -o json | jq -r '.[]'
+}
+
+function get_pkg_bldrequires {
+    local file=${1}
+
+    get_metadata_section $file | yq .BuildRequires -o json | jq -r '.[]'
+}
+
+function get_patches {
+    local file=${1}
+
+    get_metadata_section $file | yq .Patches -o json | jq -r '.[]'
+}
+
+function get_pkg_epoch {
+    local file=${1}
+
+    local _epoch=$(get_metadata_section $file | yq .Epoch -o json | jq -r)
+    if [[ "$_epoch" == 'null' ]]; then
+        say 0
+    else
+        say $_epoch
+    fi
+}
+
+function get_summary {
+    local file=${1}
+
+    get_metadata_section $file | yq .Summary -o json | jq -r
+}
+
+function get_license {
+    local file=${1}
+
+    get_metadata_section $file | yq .License -o json | jq -r
+}
+
+function get_section {
+    local file=${1}
+
+    get_metadata_section $file | yq .Section -o json | jq -r
+}
+
+function get_description {
+    local file=${1}
+
+    get_metadata_section $file | yq .Description -o json | jq -r
+}
+
+function generate_prep_script {
+    local bld_stage="prep"
+
+}
 
 function print {
     echo -n "$1"
