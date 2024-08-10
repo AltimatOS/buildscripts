@@ -161,8 +161,34 @@ function get_description {
 }
 
 function generate_prep_script {
-    local bld_stage="prep"
+    local file=${1}
 
+    local bld_stage="prep"
+    local pkgname=$(get_pkgname $file)
+    local pkgversion=$(get_pkgversion $file)
+
+    prep_script=$(mktemp)
+    cat << EOF > $prep_script
+set -e
+set -u
+set -o pipefail
+
+BLDSTAGE=$bld_stage
+
+source $SCRIPT_LIB_DIR/functions.shlib
+
+pkgname=\$(get_pkgname $file)
+pkgversion=\$(get_pkgversion $file)
+
+print_white "Building package \${pkgname}, version \${pkgversion}..." && echo
+exit
+set -x
+EOF
+
+    get_prep_section $file >> $prep_script
+    chmod 755 $prep_script
+
+    echo $prep_script
 }
 
 function print {
