@@ -39,15 +39,15 @@ SET_BLINK_MODE=5
 SET_REVERSE_MODE=7
 SET_HIDDEN_MODE=8
 
-SET_FG_COLOR_RED="\\033[$SET_BRIGHT_MODE;31m"
-SET_FG_COLOR_GREEN="\\033[$SET_BRIGHT_MODE;32m"
-SET_FG_COLOR_YELLOW="\\033[$SET_BRIGHT_MODE;33m"
-SET_FG_COLOR_BLUE="\\033[$SET_BRIGHT_MODE;34m"
-SET_FG_COLOR_MAGENTA="\\033[$SET_BRIGHT_MODE;35m"
-SET_FG_COLOR_CYAN="\\033[$SET_BRIGHT_MODE;36m"
-SET_FG_COLOR_WHITE="\\033[$SET_BRIGHT_MODE;37m"
+SET_FG_COLOR_RED=$(echo -e "bold\nsetaf 1" | tput -S)
+SET_FG_COLOR_GREEN=$(echo -e "bold\nsetaf 2" | tput -S)
+SET_FG_COLOR_YELLOW=$(echo -e "bold\nsetaf 3" | tput -S)
+SET_FG_COLOR_BLUE=$(echo -e "bold\nsetaf 4" | tput -S)
+SET_FG_COLOR_MAGENTA=$(echo -e "bold\nsetaf 5"| tput -S)
+SET_FG_COLOR_CYAN=$(echo -e "bold\nsetaf 6" | tput -S)
+SET_FG_COLOR_WHITE=$(echo -e "bold\nsetaf 7" | tput -S)
 SET_FG_COLOR_WHITE_WITH_RED_BG="\\033[41m\\033[$SET_BRIGHT_MODE;37m"
-SET_COLOR_NORMAL="\\033[$SET_NORMAL_MODE;39m"
+SET_COLOR_NORMAL=$(tput sgr0)
 
 #=============================================================================
 # CONFFIGURATION
@@ -70,6 +70,8 @@ METAPKG_ROOT=$PKGROOT/apb/meta
 BUNDLEPKG_ROOT=$PKGROOT/apb/bundle
 DB_DIR=${ROOT}System/var/lib/lpkg/db
 DB_FILE=$DB_DIR/lpkg.db
+
+# end of defaults
 
 function get_metadata_section {
     local file=${1}
@@ -201,35 +203,100 @@ function get_description {
     get_metadata_section $file | yq .Description -o json | jq -r
 }
 
-function clean() {
-    local target=$1
+function clean {
+    local target=${1}
+    local blueprint=${blueprint}
 
-    if [[ -d $target ]]; then
-        print_cyan "Removing $target... "
-        rm -rf $target
+    local name=$(get_pkgname $blueprint)
+    local version=$(get_pkgversion $blueprint)
+
+    evald_target=$(eval echo $target)
+    if [[ -d $evald_target ]]; then
+        # msg=$(eval print_cyan "Removing $evald_target... ")
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Removing $evald_target...."
+        rm -rf $evald_target
         retval=$?
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
             print_red "FAILED!" && echo
-            print_error "ERROR: could not remove directory: $retval" && echo
+            print_error "ERROR: Could not remove file or directory: $retval" && echo
             exit $retval
         fi
     else
-        print_yellow "$target: directory not found, continuing anyway... " && echo
+        print_yellow "WARNING: $evald_target: File or directory not found, continuing anyway... " && echo
     fi
 }
 
-function unpack() {
-    local target=$1
+function get_file_type {
+    local target=${1}
+
+    file -bi $target | cut -d';' -f1
+}
+
+function unpack {
+    local blueprint=${blueprint}
+    local sources=${SOURCES}
+
+    declare -a archives=$(get_srcs $blueprint)
+
+    local target=
+    local OPTSTRTRING=":s:"
+    while getopts $OPTSTRTRING opt; do
+        case $opt in
+            s)
+                target="${archives[$OPTARG]}"
+                if [[ ! -f $sources/$target ]]; then
+                    print_error "ERROR: $sources/$target: File not found! Exiting" && echo
+                    exit 2
+                fi
+            ;;
+            :)
+                print_error "ERROR: Invalid syntax! Exiting" && echo
+                print_error "       See documentation on the \`unpack\` function" && echo
+                print_error "       syntax: unpack -f \$FILENAME" && echo
+                exit 22
+            ;;
+            ?)
+                print_error "ERROR: Invalid option! Exiting" && echo
+                print_error "       See documentation on the \`unpack\` function" && echo
+                print_error "       syntax: unpack -f \$FILENAME" && echo
+                exit 22
+            ;;
+        esac
+    done
 
     if [[ ! -d $BUILDDIR ]]; then
-        mkdir -p $BUILDDIR
+        install -d -m 755 $BUILDDIR
     fi
-    if [ -f $SOURCES/$target ]; then
-        print_cyan "Unpacking sources... ($target) "
-        tar xf $SOURCES/$target -C $BUILDDIR/
-        retval=$?
+
+    # what type of archive are we dealing with?
+    mime_type=$(get_file_type $target)
+
+    if [[ -f $sources/$target ]]; then
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Unpacking sources... ($target)"
+        case "$mime_type" in
+            'application/x-xz')
+                tar xJf $sources/$target -C $BUILDDIR/
+                retval=$?
+            ;;
+            'application/x-gzip')
+                tar xzf $sources/$target -C $BUILDDIR/
+                retval=$?
+            ;;
+            'application/x-bzip2')
+                tar xjf $sources/$target -C $BUILDDIR/
+                retval=$?
+            ;;
+            'application/zip')
+                unzip -qq $sources/$target -d $BUILDDIR/
+                retval=$?
+            ;;
+            *)
+                print_error "\nERROR: Unknown archive type! Exiting" && echo
+                exit 1
+            ;;
+        esac
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
@@ -244,7 +311,85 @@ function unpack() {
 }
 
 function applypatch {
+    local blueprint=${blueprint}
 
+    local pbackup=0
+    local patchlvl=0
+    local verbose=0
+
+    local name=$(get_pkgname $blueprint)
+    local version=$(get_pkgversion $blueprint)
+    local src_dir=$(eval echo $(get_srcdir $blueprint))
+
+    local bk_name=
+    local patch_level=
+
+    optvars=$(getopt -o b:f:p:v -- "$@")
+    eval set -- "$optvars"
+
+    while true; do
+        case "$1" in
+            -b)
+                pbackup=1
+                bk_name=$2
+                shift 2
+            ;;
+            -f)
+                patch_file=$2
+                if [[ ! -f $SOURCES/$patch_file ]]; then
+                    print_error "ERROR: $SOURCES/$patch_file: File not found! Exiting" && echo
+                    exit 2
+                fi
+                shift 2
+            ;;
+            -p)
+                patchlvl=1
+                patch_level=$2
+                shift 2
+            ;;
+            -v)
+                verbose=1
+            ;;
+            --)
+                shift
+                break
+            ;;
+            *)
+                print_error "ERROR: Invalid option! Exiting" && echo
+                print_error "       See documentation on the \`applypatch\` function" && echo
+                print_error "       syntax: unpack -f \$FILENAME" && echo
+                exit 22
+            ;;
+        esac
+    done
+
+    printf "%-74s" "${SET_FG_COLOR_CYAN}Patching sources...  ($patch_file)..."
+    local flags=""
+    if [[ $patchlvl -eq 0 ]]; then
+        flags="Nlp1"
+    else
+        flags="Nlp${patch_level}"
+    fi
+    if [[ $pbackup -eq 1 ]]; then
+        flags="$flags -b $bk_name"
+    fi
+    retval=0
+    if [[ $verbose -eq 0 ]]; then
+        pushd $src_dir >/dev/null
+        patch -${flags} -i $SOURCES/$patch_file > /dev/null || retval=$?
+        popd >/dev/null
+    else
+        pushd $src_dir >/dev/null
+        patch -${flags} -i $SOURCES/$patch_file || retval=$?
+        popd >/dev/null
+    fi
+    if [[ $retval -eq 0 ]]; then
+        print_green "OK" && echo
+    else
+        print_red "FAILED!" && echo
+        print_error "ERROR: $SOURCES/$patch_file: cannot patch sources. Try applying manually to determine problem." && echo
+        exit $retval
+    fi
 }
 
 function generate_prep_script {
@@ -254,7 +399,9 @@ function generate_prep_script {
     local pkgname=$(get_pkgname $file)
     local pkgversion=$(get_pkgversion $file)
 
-    prep_script=$(mktemp)
+    mkdir -p /tmp/lpkg
+    prep_script=$(mktemp -p /tmp/lpkg)
+    print_cyan "Generating prepare script: $prep_script" >&2 && echo >&2
     cat << EOF > $prep_script
 set -e
 set -u
@@ -264,6 +411,7 @@ BLDSTAGE=$bld_stage
 
 source $SCRIPT_LIB_DIR/functions.shlib
 
+blueprint=$file
 pkgname=\$(get_pkgname $file)
 pkgversion=\$(get_pkgversion $file)
 
@@ -271,25 +419,26 @@ declare -a SOURCE
 declare -a PATCHES
 
 # assign source list
-SOURCE=$(get_srcs $file)
+SOURCE=\$(get_srcs $file)
 
 # get patches
-PATCHES=$(get_patches $file)
+PATCHES=\$(get_patches $file)
 
-print_white "Building package \${pkgname}, version \${pkgversion}..." && echo
-echo
-
-print_white "PHASE: Prepare" && echo
-SRCROOT=/srcs
-if [[ "$(pwd)" != $SRCROOT ]]; then
-    cd $SRCROOT
+print_white "EXECUTING PHASE: Prepare" && echo
+if [[ "$(pwd)" != \$SOURCES ]]; then
+    retval=0
+    cd \$SOURCES || retval=\$?
+    if [[ \$retval -ne 0 ]]; then
+        print_error "ERROR: Directory '$SOURCES' not found! Exiting" && echo
+        exit 2
+    fi
 fi
 
 # get our src_dir
-SRC_DIR=$(eval get_srcdir $file)
+SRC_DIR=\$(eval get_srcdir $file)
 
 # clean up previous directories if they existed
-clean $SRC_DIR
+clean \$SRC_DIR
 
 EOF
 
@@ -357,6 +506,6 @@ if [[ -f $HOME/.lpkgrc ]]; then
     source $HOME/.lpkgrc
 fi
 if [[ ! $cfg_loaded -gt 0 ]]; then
-    print_yellow "WARNING: Cannot find configuration. Using defaults" && echo
+    print_yellow "WARNING: Cannot find configuration. Using defaults" >&2 && echo >&2
 fi
 
