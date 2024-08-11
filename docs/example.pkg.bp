@@ -60,7 +60,7 @@ Prepare {
   # now unpack
   unpack $SOURCE[0]
   for PATCH in "${PATCHES[@]}"; do
-    patchapply -p 0 $PATCH
+    applypatch -p 0 $PATCH
   done
 }
 
