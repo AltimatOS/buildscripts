@@ -8,7 +8,6 @@ PkgMetadata {
   Sources:
     - ${name}-${version}.tar.gz
   Patches:
-    - file-5.32.dif
     - file-5.19-misc.dif
     - file-4.24-autoconf.dif
     - file-5.14-tex.dif
@@ -16,32 +15,13 @@ PkgMetadata {
     - file-4.20-xen.dif
     - file-5.22-elf.dif
     - file-5.19-printf.dif
-    - file-5.12-zip.dif
-    - file-5.17-option.dif
     - file-4.21-scribus.dif
     - file-4.21-xcursor.dif
     - file-5.19-cromfs.dif
-    - file-5.18-javacheck.dif
     - file-5.19-solv.dif
     - file-5.19-zip2.0.dif
-    - file-5.19-biorad.dif
     - file-5.19-clicfs.dif
-    - file-5.16-ocloexec.patch
-    - file-5.23-endian.patch
-    - file-5.15-clear-invalid.patch
-    - file-secure_getenv.patch
-    - file-5.28-btrfs-image.dif
-    - file-5.32-ncurses-6.1.patch
-    - CVE-2019-18218-46a8443f.patch
-    # PATCH-FIX-USTREAM for bsc#1096974, bsc#1096984, and CVE-2018-10360 -- Avoid reading past the end of buffer
-    - file-a642587a9c.patch
-    # PATCH-FIX-USTREAM for bsc#1126117, bsc#1126118, bsc#1126119, CVE-2019-8905, CVE-2019-8906, and CVE-2019-8907
-    - 0002-PR-62-spinpx-limit-size-of-file_printable.patch
-    # PATCH-FIX-SUSE previous backport caused a shorten output of the elf interprter
-    - fix_of_backport_PR-62.patch
-    # PATCH-FIX-USTREAM for bsc#1189996
-    - bsc1189996-9fbe768a.patch
-  SrcDir: $SRCROOT/${name}-${version}
+  SrcDir: $BUILDDIR/${name}-${version}
   Requires:
     - glibc
     - zlib
@@ -57,10 +37,10 @@ PkgMetadata {
 }
 
 Prepare {
-  # now unpack
-  unpack $SOURCE[0]
-  for PATCH in "${PATCHES[@]}"; do
-    applypatch -p 0 $PATCH
+  # now unpack the first source archive
+  unpack -s 0
+  for PATCH in $(get_patches $blueprint); do
+    applypatch -p 0 -f $PATCH
   done
 }
 
