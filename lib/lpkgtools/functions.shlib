@@ -412,8 +412,8 @@ BLDSTAGE=$bld_stage
 source $SCRIPT_LIB_DIR/functions.shlib
 
 blueprint=$file
-pkgname=\$(get_pkgname $file)
-pkgversion=\$(get_pkgversion $file)
+name=\$(get_pkgname $file)
+version=\$(get_pkgversion $file)
 
 declare -a SOURCE
 declare -a PATCHES
@@ -435,7 +435,7 @@ if [[ "$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval get_srcdir $file)
+SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
 # clean up previous directories if they existed
 clean \$SRC_DIR
@@ -468,8 +468,8 @@ BLDSTAGE=$bld_stage
 source $SCRIPT_LIB_DIR/functions.shlib
 
 blueprint=$file
-pkgname=\$(get_pkgname $file)
-pkgversion=\$(get_pkgversion $file)
+name=\$(get_pkgname $file)
+version=\$(get_pkgversion $file)
 
 print_white "EXECUTING PHASE: Configure" && echo
 if [[ "$(pwd)" != \$SOURCES ]]; then
@@ -482,13 +482,15 @@ if [[ "$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval get_srcdir $file)
+SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
 pushd \$SRC_DIR >/dev/null
 EOF
 
     get_configure_section $file >> $config_script
-    echo -e "\npopd >/dev/null" >> $config_script
+    cat << EOF >> $config_script
+popd >/dev/null
+EOF
     chmod 755 $config_script
 
     echo $config_script
