@@ -276,19 +276,19 @@ function unpack {
     if [[ -f $sources/$target ]]; then
         printf "%-74s" "${SET_FG_COLOR_CYAN}Unpacking sources... ($target)"
         case "$mime_type" in
-            'application/x-xz')
+            'application/x-xz'|'application/xz')
                 tar xJf $sources/$target -C $BUILDDIR/
                 retval=$?
             ;;
-            'application/x-gzip')
+            'application/x-gzip'|'application/gzip')
                 tar xzf $sources/$target -C $BUILDDIR/
                 retval=$?
             ;;
-            'application/x-bzip2')
+            'application/x-bzip2'|'application/bzip2')
                 tar xjf $sources/$target -C $BUILDDIR/
                 retval=$?
             ;;
-            'application/zip')
+            'application/zip'|'application/zip')
                 unzip -qq $sources/$target -d $BUILDDIR/
                 retval=$?
             ;;
