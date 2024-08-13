@@ -42,6 +42,6 @@ $prep_script
 $config_script
 $build_script
 
-rm $prep_file
-rm $config_file
+rm $prep_script
+rm $config_script
 rm $build_script
