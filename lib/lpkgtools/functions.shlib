@@ -545,7 +545,51 @@ EOF
 }
 
 function generate_check_script {
-    true
+    local file=${1}
+
+    local bld_stage="check"
+    local pkgname=$(get_pkgname $file)
+    local pkgversion=$(get_pkgversion $file)
+
+    mkdir -p /tmp/lpkg
+    check_script=$(mktemp -p /tmp/lpkg)
+    print_cyan "Generating check script: $check_script" >&2 && echo >&2
+    cat << EOF > $check_script
+set -e
+set -u
+set -o pipefail
+
+BLDSTAGE=$bld_stage
+
+source $SCRIPT_LIB_DIR/functions.shlib
+
+blueprint=$file
+name=\$(get_pkgname $file)
+version=\$(get_pkgversion $file)
+
+print_white "EXECUTING PHASE: check" && echo
+if [[ "$(pwd)" != \$SOURCES ]]; then
+    retval=0
+    cd \$SOURCES || retval=\$?
+    if [[ \$retval -ne 0 ]]; then
+        print_error "ERROR: Directory '$SOURCES' not found! Exiting" && echo
+        exit 2
+    fi
+fi
+
+# get our src_dir
+SRC_DIR=\$(eval echo \$(get_srcdir $file))
+
+pushd \$SRC_DIR >/dev/null
+EOF
+
+    get_check_section $file >> $check_script
+    cat << EOF >> $check_script
+popd >/dev/null
+EOF
+    chmod 755 $check_script
+
+    echo $check_script
 }
 
 function print {
