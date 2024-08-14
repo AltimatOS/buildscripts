@@ -484,6 +484,8 @@ fi
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
+print_cyan "Configuring $name $version for compilation" && echo
+
 pushd \$SRC_DIR >/dev/null
 EOF
 
@@ -532,6 +534,8 @@ fi
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
+print_cyan "Building $name $version. Please wait... " && echo
+
 pushd \$SRC_DIR >/dev/null
 EOF
 
@@ -579,6 +583,9 @@ fi
 
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_srcdir $file))
+
+print_cyan "Running software test suite for $name $version to check "
+print_cyan "correctness of build. Please wait... " && echo
 
 pushd \$SRC_DIR >/dev/null
 EOF
