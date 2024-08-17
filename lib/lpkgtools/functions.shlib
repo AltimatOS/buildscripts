@@ -406,6 +406,9 @@ function configure32 {
         exit 1
     fi
 
+    # get our package name
+    pkgname=$(get_pkgname $blueprint)
+
     # defaults for 64-bit platforms
     local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
     local PROG_PREFIX=""
@@ -502,6 +505,9 @@ function configure64 {
         print_error "ERROR: Configure script missing! Do you need to run autoconf and friends?" && echo
         exit 1
     fi
+
+    # get our package name
+    pkgname=$(get_pkgname $blueprint)
 
     # defaults for 64-bit platforms
     local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
@@ -666,6 +672,8 @@ source $SCRIPT_LIB_DIR/functions.shlib
 blueprint=$file
 name=\$(get_pkgname $file)
 version=\$(get_pkgversion $file)
+
+export blueprint
 
 print_white "EXECUTING PHASE: config" && echo
 if [[ "$(pwd)" != \$SOURCES ]]; then
