@@ -775,6 +775,15 @@ EOF
 
     get_build_section $file >> $build_script
     cat << EOF >> $build_script
+    retval=\$?
+    if [[ \$retval -eq 0 ]]; then
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "OK" && echo
+    else
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "FAILED" && echo
+        print_error "ERROR: Configuration of sources failed! See previous output to determine the problem. Exiting" && \
+            echo
+        exit \$retval
+    fi
 popd >/dev/null
 EOF
     chmod 755 $build_script
