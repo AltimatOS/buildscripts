@@ -430,7 +430,7 @@ function configure32 {
     local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
     local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
     local longopts="$opts1,$opts2"
-    local optvars=$(getopt --long $longopts -- "$@")
+    local optvars=$(getopt -o p:s:P:e:b:S:c:d:i:l:L:v:V:m:I:D: --long $longopts -- "$@")
     eval set -- "$optvars"
 
     while true; do
@@ -527,7 +527,7 @@ function configure64 {
     local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
     local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
     local longopts="$opts1,$opts2"
-    local optvars=$(getopt --long $longopts -- "$@")
+    local optvars=$(getopt -o p:s:P:e:b:S:c:d:i:l:L:v:V:m:I:D: --long $longopts -- "$@")
     eval set -- "$optvars"
 
     while true; do
