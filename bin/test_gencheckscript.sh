@@ -36,18 +36,15 @@ prep_script=$(generate_prep_script $BP_FILE)
 config_script=$(generate_config_script $BP_FILE)
 build_script=$(generate_build_script $BP_FILE)
 check_script=$(generate_check_script $BP_FILE)
-install_script=$(generate_install_script $BP_FILE)
 
-cat $install_script
+cat $check_script
 
 $prep_script
 $config_script
 $build_script
 $check_script
-$install_script
 
 rm $prep_script
 rm $config_script
 rm $build_script
 rm $check_script
-rm $install_script
