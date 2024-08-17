@@ -554,6 +554,7 @@ function configure64 {
     local mandir=
     local infodir=
 
+    set -x
     while true; do
         case "$1" in
             '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
@@ -577,7 +578,6 @@ function configure64 {
         esac
     done
 
-    set -x
     retval=0
     CFLAGS="${CFLAGS:--O2 -g -m64 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CFLAGS ;
     CXXFLAGS="${CXXFLAGS:--O2 -g -m64 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CXXFLAGS ;
