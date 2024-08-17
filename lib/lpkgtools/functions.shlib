@@ -210,12 +210,12 @@ function clean {
     local name=$(get_pkgname $blueprint)
     local version=$(get_pkgversion $blueprint)
 
-    evald_target=$(eval echo $target)
+    local evald_target=$(eval echo $target)
     if [[ -d $evald_target ]]; then
         # msg=$(eval print_cyan "Removing $evald_target... ")
         printf "%-74s" "${SET_FG_COLOR_CYAN}Removing $evald_target...."
         rm -rf $evald_target
-        retval=$?
+        local retval=$?
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
@@ -245,7 +245,7 @@ function unpack {
     while getopts $OPTSTRTRING opt; do
         case $opt in
             s)
-                target="${archives[$OPTARG]}"
+                local target="${archives[$OPTARG]}"
                 if [[ ! -f $sources/$target ]]; then
                     print_error "ERROR: $sources/$target: File not found! Exiting" && echo
                     exit 2
@@ -271,8 +271,9 @@ function unpack {
     fi
 
     # what type of archive are we dealing with?
-    mime_type=$(get_file_type $target)
+    local mime_type=$(get_file_type $target)
 
+    local retval=0
     if [[ -f $sources/$target ]]; then
         printf "%-74s" "${SET_FG_COLOR_CYAN}Unpacking sources... ($target)"
         case "$mime_type" in
@@ -322,9 +323,10 @@ function applypatch {
     local src_dir=$(eval echo $(get_srcdir $blueprint))
 
     local bk_name=
+    local patch_file=
     local patch_level=
 
-    optvars=$(getopt -o b:f:p:v -- "$@")
+    local optvars=$(getopt -o b:f:p:v -- "$@")
     eval set -- "$optvars"
 
     while true; do
@@ -373,7 +375,7 @@ function applypatch {
     if [[ $pbackup -eq 1 ]]; then
         flags="$flags -b $bk_name"
     fi
-    retval=0
+    local retval=0
     if [[ $verbose -eq 0 ]]; then
         pushd $src_dir >/dev/null
         patch -${flags} -i $SOURCES/$patch_file > /dev/null || retval=$?
@@ -392,6 +394,200 @@ function applypatch {
     fi
 }
 
+function configure32 {
+    # BIG ASSUMPTION! This function requires to be IN the directory that the configure script is
+    # located in the unpacked source tree!
+    #
+    # check for the configure script
+    if [[ -f ./configure ]]; then
+        CONFIGURATION_SCRIPT="./configure"
+    else
+        print_error "ERROR: Configure script missing! Do you need to run autoconf and friends?" && echo
+        exit 1
+    fi
+
+    # defaults for 64-bit platforms
+    local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
+    local PROG_PREFIX=""
+    local PROG_SUFFIX=""
+    local PREFIX="/System"
+    local EXEC_PREFIX="/System"
+    local BIN_DIR="$PREFIX/bin"
+    local SBIN_DIR="$PREFIX/sbin"
+    local SYS_CONF_DIR="$PREFIX/cfg"
+    local DATA_DIR="$PREFIX/share"
+    local INCLUDE_DIR="$PREFIX/include"
+    local LIB_DIR="$PREFIX/lib"
+    local LIB_EXEC_DIR="$PREFIX/libexec"
+    local LOCAL_STATE_DIR="$PREFIX/var"
+    local SHARED_STATE_DIR="$PREFIX/var/lib"
+    local MAN_DIR="$DATA_DIR/man"
+    local INFO_DIR="$DATA_DIR/info"
+    local DOC_DIR="$DATA_DIR/doc"
+    local RUN_DIR="$LOCAL_STATE_DIR/run"
+    # end defaults
+
+    local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
+    local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
+    local longopts="$opts1,$opts2"
+    local optvars=$(getopt --long $longopts -- "$@")
+    eval set -- "$optvars"
+
+    while true; do
+        case "$1" in
+            '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
+            '--program-suffix') prog_suffix=${2:-$PROG_SUFFIX} && shift 2 && continue;;
+            '--prefix')         prefix=${2:-$PREFIX} && shift 2 && continue;;
+            '--exec-prefix')    exec_prefix=${2:-$EXEC_PREFIX} && shift 2 && continue;;
+            '--bindir')         bindir=${2:-$BIN_DIR} && shift 2 && continue;;
+            '--sbindir')        sbindir=${2:-$SBIN_DIR} && shift 2 && continue;;
+            '--sysconfdir')     sysconfdir=${2:-$SYS_CONF_DIR} && shift 2 && continue;;
+            '--datadir')        datadir=${2:-$DATA_DIR} && shift 2 && continue;;
+            '--includedir')     includedir=${2:-$INCLUDE_DIR} && shift 2 && continue;;
+            '--libdir')         libdir=${2:-$LIB_DIR} && shift 2 && continue;;
+            '--libexecdir')     libexecdir=${2:-$LIB_EXEC_DIR} && shift 2 && continue;;
+            '--localstatedir')  localstatedir=${2:-$LOCAL_STATE_DIR} && shift 2 && continue;;
+            '--sharedstatedir') sharedstatedir=${2:-$SHARED_STATE_DIR} && shift 2 && continue;;
+            '--docdir')         docdir=${2:-$DOC_DIR} && shift 2 && continue;;
+            '--mandir')         mandir=${2:-$MAN_DIR} && shift 2 && continue;;
+            '--infodir')        infodir=${2:-$INFO_DIR} && shift 2 && continue;;
+            '--')               shift && break
+            # let all other flags fall through to the underlying script
+        esac
+    done
+
+    print_cyan "Configuring $PKGNAME for compilation..." && echo
+
+    retval=0
+    CFLAGS="${CFLAGS:--O2 -g -m32 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CFLAGS ;
+    CXXFLAGS="${CXXFLAGS:--O2 -g -m32 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CXXFLAGS ;
+    FFLAGS="${FFLAGS:--O2 -g -m32 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export FFLAGS ;
+    $CONFIGURATION_SCRIPT \
+        --host="$TARGET_FLAGS" --build="$TARGET_FLAGS" \
+        --program-prefix=$prog_prefix \
+        --program-suffix=$prog_suffix \
+        --prefix=$prefix \
+        --exec-prefix=$exec_prefix \
+        --bindir=$bindir \
+        --sbindir=$sbindir \
+        --sysconfdir=$sysconfdir \
+        --datadir=$datadir \
+        --includedir=$includedir \
+        --libdir=$libdir \
+        --libexecdir=$libexecdir \
+        --localstatedir=$localstatedir \
+        --sharedstatedir=$sharedstatedir \
+        --docdir=$docdir \
+        --mandir=$mandir \
+        --infodir=$infodir \
+        "$@" || $retval=$?
+    if [[ $retval -eq 0 ]]; then
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Configuration... " && print_green "OK" && echo
+    else
+        printf "%-70s" "${SET_FG_COLOR_CYAN}Configuration... " && print_red "FAILED" && echo
+        print_error "ERROR: Configuration of sources failed! See previous output to determine the problem. Exiting" && \
+            echo
+        exit $retval
+    fi
+}
+
+function configure64 {
+    # BIG ASSUMPTION! This function requires to be IN the directory that the configure script is
+    # located in the unpacked source tree!
+    #
+    # check for the configure script
+    if [[ -f ./configure ]]; then
+        CONFIGURATION_SCRIPT="./configure"
+    else
+        print_error "ERROR: Configure script missing! Do you need to run autoconf and friends?" && echo
+        exit 1
+    fi
+
+    # defaults for 64-bit platforms
+    local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
+    local PROG_PREFIX=""
+    local PROG_SUFFIX=""
+    local PREFIX="/System"
+    local EXEC_PREFIX="/System"
+    local BIN_DIR="$PREFIX/bin"
+    local SBIN_DIR="$PREFIX/sbin"
+    local SYS_CONF_DIR="$PREFIX/cfg"
+    local DATA_DIR="$PREFIX/share"
+    local INCLUDE_DIR="$PREFIX/include"
+    local LIB_DIR="$PREFIX/lib64"
+    local LIB_EXEC_DIR="$PREFIX/libexec"
+    local LOCAL_STATE_DIR="$PREFIX/var"
+    local SHARED_STATE_DIR="$PREFIX/var/lib"
+    local MAN_DIR="$DATA_DIR/man"
+    local INFO_DIR="$DATA_DIR/info"
+    local DOC_DIR="$DATA_DIR/doc"
+    local RUN_DIR="$LOCAL_STATE_DIR/run"
+    # end defaults
+
+    local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
+    local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
+    local longopts="$opts1,$opts2"
+    local optvars=$(getopt --long $longopts -- "$@")
+    eval set -- "$optvars"
+
+    while true; do
+        case "$1" in
+            '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
+            '--program-suffix') prog_suffix=${2:-$PROG_SUFFIX} && shift 2 && continue;;
+            '--prefix')         prefix=${2:-$PREFIX} && shift 2 && continue;;
+            '--exec-prefix')    exec_prefix=${2:-$EXEC_PREFIX} && shift 2 && continue;;
+            '--bindir')         bindir=${2:-$BIN_DIR} && shift 2 && continue;;
+            '--sbindir')        sbindir=${2:-$SBIN_DIR} && shift 2 && continue;;
+            '--sysconfdir')     sysconfdir=${2:-$SYS_CONF_DIR} && shift 2 && continue;;
+            '--datadir')        datadir=${2:-$DATA_DIR} && shift 2 && continue;;
+            '--includedir')     includedir=${2:-$INCLUDE_DIR} && shift 2 && continue;;
+            '--libdir')         libdir=${2:-$LIB_DIR} && shift 2 && continue;;
+            '--libexecdir')     libexecdir=${2:-$LIB_EXEC_DIR} && shift 2 && continue;;
+            '--localstatedir')  localstatedir=${2:-$LOCAL_STATE_DIR} && shift 2 && continue;;
+            '--sharedstatedir') sharedstatedir=${2:-$SHARED_STATE_DIR} && shift 2 && continue;;
+            '--docdir')         docdir=${2:-$DOC_DIR} && shift 2 && continue;;
+            '--mandir')         mandir=${2:-$MAN_DIR} && shift 2 && continue;;
+            '--infodir')        infodir=${2:-$INFO_DIR} && shift 2 && continue;;
+            '--')               shift && break
+            # let all other flags fall through to the underlying script
+        esac
+    done
+
+    print_cyan "Configuring $PKGNAME for compilation..." && echo
+
+    retval=0
+    CFLAGS="${CFLAGS:--O2 -g -m64 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CFLAGS ;
+    CXXFLAGS="${CXXFLAGS:--O2 -g -m64 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CXXFLAGS ;
+    FFLAGS="${FFLAGS:--O2 -g -m64 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export FFLAGS ;
+    $CONFIGURATION_SCRIPT \
+        --host="$TARGET_FLAGS" --build="$TARGET_FLAGS" \
+        --program-prefix=$prog_prefix \
+        --program-suffix=$prog_suffix \
+        --prefix=$prefix \
+        --exec-prefix=$exec_prefix \
+        --bindir=$bindir \
+        --sbindir=$sbindir \
+        --sysconfdir=$sysconfdir \
+        --datadir=$datadir \
+        --includedir=$includedir \
+        --libdir=$libdir \
+        --libexecdir=$libexecdir \
+        --localstatedir=$localstatedir \
+        --sharedstatedir=$sharedstatedir \
+        --docdir=$docdir \
+        --mandir=$mandir \
+        --infodir=$infodir \
+        "$@" || $retval=$?
+    if [[ $retval -eq 0 ]]; then
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Configuration... " && print_green "OK" && echo
+    else
+        printf "%-70s" "${SET_FG_COLOR_CYAN}Configuration... " && print_red "FAILED" && echo
+        print_error "ERROR: Configuration of sources failed! See previous output to determine the problem. Exiting" && \
+            echo
+        exit $retval
+    fi
+}
+
 function generate_prep_script {
     local file=${1}
 
@@ -400,7 +596,7 @@ function generate_prep_script {
     local pkgversion=$(get_pkgversion $file)
 
     mkdir -p /tmp/lpkg
-    prep_script=$(mktemp -p /tmp/lpkg)
+    local prep_script=$(mktemp -p /tmp/lpkg)
     print_cyan "Generating prepare script: $prep_script" >&2 && echo >&2
     cat << EOF > $prep_script
 set -e
@@ -456,7 +652,7 @@ function generate_config_script {
     local pkgversion=$(get_pkgversion $file)
 
     mkdir -p /tmp/lpkg
-    config_script=$(mktemp -p /tmp/lpkg)
+    local config_script=$(mktemp -p /tmp/lpkg)
     print_cyan "Generating configure script: $config_script" >&2 && echo >&2
     cat << EOF > $config_script
 set -e
@@ -506,7 +702,7 @@ function generate_build_script {
     local pkgversion=$(get_pkgversion $file)
 
     mkdir -p /tmp/lpkg
-    build_script=$(mktemp -p /tmp/lpkg)
+    local build_script=$(mktemp -p /tmp/lpkg)
     print_cyan "Generating build script: $build_script" >&2 && echo >&2
     cat << EOF > $build_script
 set -e
@@ -556,7 +752,7 @@ function generate_check_script {
     local pkgversion=$(get_pkgversion $file)
 
     mkdir -p /tmp/lpkg
-    check_script=$(mktemp -p /tmp/lpkg)
+    local check_script=$(mktemp -p /tmp/lpkg)
     print_cyan "Generating check script: $check_script" >&2 && echo >&2
     cat << EOF > $check_script
 set -e
@@ -597,6 +793,10 @@ EOF
     chmod 755 $check_script
 
     echo $check_script
+}
+
+function generate_install_script {
+    true
 }
 
 function print {

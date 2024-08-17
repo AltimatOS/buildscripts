@@ -45,8 +45,7 @@ Prepare {
 }
 
 Configure {
-  ./configure --prefix=/System       \
-              --libdir=/System/lib64
+  configure64
 }
 
 Build {
@@ -58,7 +57,7 @@ Check {
 }
 
 Install {
-    make install
+  make install
 }
 
 Clean {
