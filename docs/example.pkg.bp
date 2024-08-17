@@ -1,10 +1,7 @@
-PkgMetadata {
+BuildMetadata {
   Name:    file
   Version: 5.45
   Url:     ftp://ftp.astron.com/pub/file/${name}-${version}.tar.gz
-  License: bsd-2-clause
-  Section: System/Utilities
-  Summary: A command to query a file's type
   Sources:
     - ${name}-${version}.tar.gz
   Patches:
@@ -22,18 +19,79 @@ PkgMetadata {
     - file-5.19-zip2.0.dif
     - file-5.19-clicfs.dif
   SrcDir: $BUILDDIR/${name}-${version}
-  Requires:
-    - glibc
-    - zlib
   BuildRequires:
     - findutils
-    - glibc
+    - glibc-devel
     - libtool
+    - zlib-devel
+  PkgsGenerated:
+    - file
+    - libmagic
+    - libmagic-devel
+    - libmagic-static-devel
+}
+
+Pkg -n file {
+  Type:    binary
+  Name:    file
+  Version: 5.45
+  Release: 1
+  License: bsd-2-clause
+  Section: System/Utilities
+  Summary: A command to query a file's type
+  Requires:
+    - glibc
+    - libmagic
     - zlib
   Description: |
     The file command is used to query a file for its type by reading the target
     file's magic type or other attributes about the file. This is then checked
     against the magic file on the system to determine it's file type.
+}
+
+Pkg libmagic {
+  Type:    binary
+  Name:    libmagic
+  Version: 5.45
+  Release: 1
+  License: bsd-2-clause
+  Section: System/Utilities
+  Summary: A library to identify files by its attributes
+  Requires:
+    - glibc-devel
+    - zlib-devel
+  Description: |
+    This package contains the library for detecting a file's type programmatically.
+}
+
+Pkg libmagic-devel {
+  Type:    binary
+  Name:    libmagic-devel
+  Version: 5.45
+  Release: 1
+  License: bsd-2-clause
+  Section: Development
+  Summary: The development files for libmagic.
+  Requires:
+    - glibc-devel
+    - zlib-devel
+  Description: |
+    The development files for libmagic, including headers and links.
+}
+
+Pkg libmagic-static-devel {
+  Type:    binary
+  Name:    libmagic-static-devel
+  Version: 5.45
+  Release: 1
+  License: bsd-2-clause
+  Section: Development
+  Summary: The static library for libmagic.
+  Requires:
+    - glibc-static-devel
+    - zlib-static-devel
+  Description: |
+    The static library for libmagic.
 }
 
 Prepare {
@@ -57,7 +115,7 @@ Check {
 }
 
 Install {
-  make install
+  make_install
 }
 
 Clean {
