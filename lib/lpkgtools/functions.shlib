@@ -871,7 +871,7 @@ source $SCRIPT_LIB_DIR/functions.shlib
 
 # verify that we're not running as root. If we are bomb out
 if [[ "\$(id -u)" -eq 0 ]]; then
-    print_error "ERROR: make install should never be run as root! Exiting"
+    print_error "ERROR: make install should never be run as root! Exiting" && echo
     exit 1
 fi
 
