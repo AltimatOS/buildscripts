@@ -768,7 +768,7 @@ fi
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
-print_cyan "Building $name $version. Please wait... " && echo
+print_cyan "Building \$name \$version. Please wait... " && echo
 
 pushd \$SRC_DIR >/dev/null
 EOF
