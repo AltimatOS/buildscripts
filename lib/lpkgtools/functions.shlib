@@ -536,6 +536,24 @@ function configure64 {
     local optvars=$(getopt -o p:s:P:e:b:S:c:d:i:l:L:v:V:m:I:D: --long $longopts -- "$@")
     eval set -- "$optvars"
 
+    # declare our vars
+    local prog_prefix=
+    local prog_suffix=
+    local prefix=
+    local exec_prefix=
+    local bindir=
+    local sbindir=
+    local sysconfdir=
+    local datadir=
+    local includedir=
+    local libdir=
+    local libexecdir=
+    local localstatedir=
+    local sharedstatedir=
+    local docdir=
+    local mandir=
+    local infodir=
+
     while true; do
         case "$1" in
             '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
