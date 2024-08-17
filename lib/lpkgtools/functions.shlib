@@ -430,6 +430,24 @@ function configure32 {
     local RUN_DIR="$LOCAL_STATE_DIR/run"
     # end defaults
 
+    # declare our vars
+    local prog_prefix=$PROG_PREFIX
+    local prog_suffix=$PROG_SUFFIX
+    local prefix=$PREFIX
+    local exec_prefix=$EXEC_PREFIX
+    local bindir=$BIN_DIR
+    local sbindir=$SBIN_DIR
+    local sysconfdir=$SYS_CONF_DIR
+    local datadir=$DATA_DIR
+    local includedir=$INCLUDE_DIR
+    local libdir=$LIB_DIR
+    local libexecdir=$LIB_EXEC_DIR
+    local localstatedir=$LOCAL_STATE_DIR
+    local sharedstatedir=$SHARED_STATE_DIR
+    local docdir=$DOC_DIR
+    local mandir=$MAN_DIR
+    local infodir=$INFO_DIR
+
     local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
     local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
     local longopts="$opts1,$opts2"
@@ -438,28 +456,25 @@ function configure32 {
 
     while true; do
         case "$1" in
-            '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
-            '--program-suffix') prog_suffix=${2:-$PROG_SUFFIX} && shift 2 && continue;;
-            '--prefix')         prefix=${2:-$PREFIX} && shift 2 && continue;;
-            '--exec-prefix')    exec_prefix=${2:-$EXEC_PREFIX} && shift 2 && continue;;
-            '--bindir')         bindir=${2:-$BIN_DIR} && shift 2 && continue;;
-            '--sbindir')        sbindir=${2:-$SBIN_DIR} && shift 2 && continue;;
-            '--sysconfdir')     sysconfdir=${2:-$SYS_CONF_DIR} && shift 2 && continue;;
-            '--datadir')        datadir=${2:-$DATA_DIR} && shift 2 && continue;;
-            '--includedir')     includedir=${2:-$INCLUDE_DIR} && shift 2 && continue;;
-            '--libdir')         libdir=${2:-$LIB_DIR} && shift 2 && continue;;
-            '--libexecdir')     libexecdir=${2:-$LIB_EXEC_DIR} && shift 2 && continue;;
-            '--localstatedir')  localstatedir=${2:-$LOCAL_STATE_DIR} && shift 2 && continue;;
-            '--sharedstatedir') sharedstatedir=${2:-$SHARED_STATE_DIR} && shift 2 && continue;;
-            '--docdir')         docdir=${2:-$DOC_DIR} && shift 2 && continue;;
-            '--mandir')         mandir=${2:-$MAN_DIR} && shift 2 && continue;;
-            '--infodir')        infodir=${2:-$INFO_DIR} && shift 2 && continue;;
-            '--')               shift && break
-            # let all other flags fall through to the underlying script
+            '--program-prefix') prog_prefix=${2} && shift 2 && continue;;
+            '--program-suffix') prog_suffix=${2} && shift 2 && continue;;
+            '--prefix')         prefix=${2} && shift 2 && continue;;
+            '--exec-prefix')    exec_prefix=${2} && shift 2 && continue;;
+            '--bindir')         bindir=${2} && shift 2 && continue;;
+            '--sbindir')        sbindir=${2} && shift 2 && continue;;
+            '--sysconfdir')     sysconfdir=${2} && shift 2 && continue;;
+            '--datadir')        datadir=${2} && shift 2 && continue;;
+            '--includedir')     includedir=${2} && shift 2 && continue;;
+            '--libdir')         libdir=${2} && shift 2 && continue;;
+            '--libexecdir')     libexecdir=${2} && shift 2 && continue;;
+            '--localstatedir')  localstatedir=${2} && shift 2 && continue;;
+            '--sharedstatedir') sharedstatedir=${2} && shift 2 && continue;;
+            '--docdir')         docdir=${2} && shift 2 && continue;;
+            '--mandir')         mandir=${2} && shift 2 && continue;;
+            '--infodir')        infodir=${2} && shift 2 && continue;;
+            '--')               shift && break ;;
         esac
     done
-
-    print_cyan "Configuring $pkgname for compilation..." && echo
 
     retval=0
     CFLAGS="${CFLAGS:--O2 -g -m32 -fmessage-length=0 -D_FORTIFY_SOURCE=2 -fstack-protector -funwind-tables -fasynchronous-unwind-tables}" ; export CFLAGS ;
@@ -548,7 +563,6 @@ function configure64 {
     local mandir=$MAN_DIR
     local infodir=$INFO_DIR
 
-    set -x
     local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
     local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
     local longopts="$opts1,$opts2"
