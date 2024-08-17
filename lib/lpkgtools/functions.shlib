@@ -530,12 +530,6 @@ function configure64 {
     local RUN_DIR="$LOCAL_STATE_DIR/run"
     # end defaults
 
-    local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
-    local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
-    local longopts="$opts1,$opts2"
-    local optvars=$(getopt -o p:s:P:e:b:S:c:d:i:l:L:v:V:m:I:D: --long $longopts -- "$@")
-    eval set -- "$optvars"
-
     # declare our vars
     local prog_prefix=
     local prog_suffix=
@@ -555,6 +549,12 @@ function configure64 {
     local infodir=
 
     set -x
+    local opts1="program-prefix:,program-suffix:,prefix:,exec-prefix:,exec-prefix:,bindir:,sbindir:,sysconfdir:,datadir"
+    local opts2="includedir:,libdir:,libexecdir:,localstatedir:,sharedstatedir:,mandir:,infodir:,docdir:"
+    local longopts="$opts1,$opts2"
+    local optvars=$(getopt -o p:s:P:e:b:S:c:d:i:l:L:v:V:m:I:D: --long $longopts -- "$@")
+    eval set -- "$optvars"
+
     while true; do
         case "$1" in
             '--program-prefix') prog_prefix=${2:-$PROG_PREFIX} && shift 2 && continue;;
@@ -573,8 +573,7 @@ function configure64 {
             '--docdir')         docdir=${2:-$DOC_DIR} && shift 2 && continue;;
             '--mandir')         mandir=${2:-$MAN_DIR} && shift 2 && continue;;
             '--infodir')        infodir=${2:-$INFO_DIR} && shift 2 && continue;;
-            '--')               shift && break
-            # let all other flags fall through to the underlying script
+            '--')               shift && break ;;
         esac
     done
 
