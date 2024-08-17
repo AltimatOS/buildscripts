@@ -31,7 +31,7 @@ BuildMetadata {
     - libmagic-static-devel
 }
 
-Pkg -n file {
+Pkg file {
   Type:    binary
   Name:    file
   Version: 5.45
