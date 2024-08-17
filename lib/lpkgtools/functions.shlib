@@ -680,7 +680,7 @@ fi
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_srcdir $file))
 
-print_cyan "Configuring $name $version for compilation" && echo
+print_cyan "Configuring \$name \$version for compilation" && echo
 
 pushd \$SRC_DIR >/dev/null
 EOF
