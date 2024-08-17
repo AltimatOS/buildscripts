@@ -35,6 +35,8 @@ fi
 prep_file=$(generate_prep_script $BP_FILE)
 config_file=$(generate_config_script $BP_FILE)
 
+cat $config_file
+
 $prep_file
 $config_file
 
