@@ -196,6 +196,13 @@ function get_build_patches {
     get_build_metadata_section $file | yq .Patches -o json | jq -r '.[]'
 }
 
+# backwards compatibility function that should be eventually refactored out
+function get_patches {
+    local file=${1}
+
+    get_patches $file
+}
+
 function get_pkg_epoch {
     local pkg=${1}
     local file=${2}
