@@ -347,9 +347,9 @@ function applypatch {
     local patchlvl=0
     local verbose=0
 
-    local name=$(get_pkgname $blueprint)
-    local version=$(get_pkgversion $blueprint)
-    local src_dir=$(eval echo $(get_srcdir $blueprint))
+    local name=$(get_pkg_name_from_build_metadata $blueprint)
+    local version=$(get_pkg_version_from_build_metadata $blueprint)
+    local src_dir=$(eval echo $(get_bld_srcdir $blueprint))
 
     local bk_name=
     local patch_file=
@@ -417,7 +417,7 @@ function applypatch {
     if [[ $retval -eq 0 ]]; then
         print_green "OK" && echo
     else
-        print_red "FAILED!" && echo
+        printf "%-74s" "${SET_FG_COLOR_CYAN}Patching sources...  ($patch_file)..." && print_red "FAILED!" && echo
         print_error "ERROR: $SOURCES/$patch_file: cannot patch sources. Try applying manually to determine problem." && echo
         exit $retval
     fi
