@@ -246,9 +246,9 @@ function clean {
     local evald_target=$(eval echo $target)
     if [[ -d $evald_target ]]; then
         # msg=$(eval print_cyan "Removing $evald_target... ")
+        local retval=0
         printf "%-74s" "${SET_FG_COLOR_CYAN}Removing $evald_target...."
-        rm -rf $evald_target
-        local retval=$?
+        rm -rf $evald_target || retval=$?
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
