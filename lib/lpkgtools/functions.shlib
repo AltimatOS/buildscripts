@@ -252,7 +252,7 @@ function clean {
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
-            print_red "FAILED!" && echo
+            printf "%-74s" "${SET_FG_COLOR_CYAN}Removing $evald_target...." && print_red "FAILED!" && echo
             print_error "ERROR: Could not remove file or directory: $retval" && echo
             exit $retval
         fi
