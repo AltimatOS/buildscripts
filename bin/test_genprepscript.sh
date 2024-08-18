@@ -36,4 +36,4 @@ prep_file=$(generate_prep_script $BP_FILE)
 
 $prep_file
 
-# rm $prep_file
+rm $prep_file
