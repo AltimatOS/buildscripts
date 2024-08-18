@@ -1,2 +1,4 @@
 *.db
 
+# don't track Kate swap files
+*.kate-swp
