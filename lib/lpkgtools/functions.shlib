@@ -64,6 +64,7 @@ BUILDDIR=$PKGROOT/build
 SOURCES=$PKGROOT/sources
 BLUEPRINTS=$PKGROOT/blueprints
 TMP=$PKGROOT/temp
+DESTROOT=$PKGROOT/destroot
 SRCPKG_ROOT=$PKGROOT/apb/src
 BINPKG_ROOT=$PKGROOT/apb/bin
 METAPKG_ROOT=$PKGROOT/apb/meta
@@ -654,7 +655,11 @@ function configure64 {
 }
 
 function make_install {
-    make DESTDIR=$
+    local name=${1}
+    local version=${2}
+
+    install -d -m 755 $DESTROOT/${name}-${version}
+    make DESTDIR=$DESTROOT/${name}-${version} install
 }
 
 function generate_prep_script {
@@ -909,8 +914,8 @@ if [[ "\$(id -u)" -eq 0 ]]; then
 fi
 
 blueprint=$file
-name=\$(get_pkgname \$blueprint)
-version=\$(get_pkgversion \$blueprint)
+name=\$(get_pkg_name_from_build_metadata \$blueprint)
+version=\$(get_pkg_version_from_build_metadata \$blueprint)
 
 print_white "EXECUTING PHASE: install" && echo
 if [[ "\$(pwd)" != \$SOURCES ]]; then
@@ -923,9 +928,9 @@ if [[ "\$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval echo \$(get_srcdir \$blueprint))
+SRC_DIR=\$(eval echo \$(get_bld_srcdir \$blueprint))
 
-print_cyan "Running software test suite for \$name \$version to check correctness of build... " && echo
+print_cyan "Running software into package root for \$name \$version... " && echo
 
 pushd \$SRC_DIR >/dev/null
 EOF
@@ -934,10 +939,10 @@ EOF
     cat << EOF >> $install_script
     retval=\$?
     if [[ \$retval -eq 0 ]]; then
-        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Install status (\$name \$version)... " && print_green "OK" && echo
     else
-        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
-        print_error "ERROR: Test suite for \$name failed! See previous output to determine the problem. Exiting" && \
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Install status (\$name \$version)... " && print_green "FAILED" && echo
+        print_error "ERROR: Install of \$name into destroot failed! See previous output to determine the problem. Exiting" && \
             echo
         exit \$retval
     fi
