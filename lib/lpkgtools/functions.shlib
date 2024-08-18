@@ -330,7 +330,7 @@ function unpack {
         if [[ $retval -eq 0 ]]; then
             print_green "OK" && echo
         else
-            print_red "FAILED!" && echo
+            printf "%-74s" "${SET_FG_COLOR_CYAN}Unpacking sources... ($target)" && print_red "FAILED!" && echo
             print_error "ERROR: could not unpack $target: $retval" && echo
             exit $retval
         fi
