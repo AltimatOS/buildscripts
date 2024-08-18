@@ -41,7 +41,7 @@ for pkg in $(echo $pkgs); do
         ((++src_instance))
     done
     patch_instance=0
-    for PATCH in $(get_build_patches $BP_FILE); do
+    for PATCH in $(get_patches $BP_FILE); do
         printf "%-16s %s\n" "Patch${patch_instance}:" "$PATCH"
         ((++patch_instance))
     done
