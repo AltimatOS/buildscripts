@@ -240,8 +240,8 @@ function clean {
     local target=${1}
     local blueprint=${blueprint}
 
-    local name=$(get_pkgname $blueprint)
-    local version=$(get_pkgversion $blueprint)
+    local name=$(get_pkg_name_from_build_metadata $blueprint)
+    local version=$(get_pkg_version_from_build_metadata $blueprint)
 
     local evald_target=$(eval echo $target)
     if [[ -d $evald_target ]]; then
