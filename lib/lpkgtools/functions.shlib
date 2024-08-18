@@ -717,8 +717,8 @@ function generate_config_script {
     local file=${1}
 
     local bld_stage="config"
-    local pkgname=$(get_pkgname $file)
-    local pkgversion=$(get_pkgversion $file)
+    local pkgname=$(get_pkg_name_from_build_metadata $file)
+    local pkgversion=$(get_pkg_version_from_build_metadata $file)
 
     mkdir -p /tmp/lpkg
     local config_script=$(mktemp -p /tmp/lpkg)
@@ -733,13 +733,13 @@ BLDSTAGE=$bld_stage
 source $SCRIPT_LIB_DIR/functions.shlib
 
 blueprint=$file
-name=\$(get_pkgname $file)
-version=\$(get_pkgversion $file)
+name=\$(get_pkg_name_from_build_metadata \$blueprint)
+version=\$(get_pkg_version_from_build_metadata \$blueprint)
 
 export blueprint
 
 print_white "EXECUTING PHASE: config" && echo
-if [[ "$(pwd)" != \$SOURCES ]]; then
+if [[ "\$(pwd)" != \$SOURCES ]]; then
     retval=0
     cd \$SOURCES || retval=\$?
     if [[ \$retval -ne 0 ]]; then
@@ -749,7 +749,7 @@ if [[ "$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval echo \$(get_srcdir $file))
+SRC_DIR=\$(eval echo \$(get_bld_srcdir \$blueprint))
 
 print_cyan "Configuring \$name \$version for compilation" && echo
 
