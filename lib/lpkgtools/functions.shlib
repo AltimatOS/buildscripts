@@ -659,7 +659,7 @@ function make_install {
     local version=${2}
 
     install -d -m 755 $DESTROOT/${name}-${version}
-    make DESTDIR=$DESTROOT/${name}-${ersion} install
+    make DESTDIR=$DESTROOT/${name}-${version} install
 }
 
 function generate_prep_script {
@@ -930,7 +930,7 @@ fi
 # get our src_dir
 SRC_DIR=\$(eval echo \$(get_bld_srcdir \$blueprint))
 
-print_cyan "Running software test suite for \$name \$version to check correctness of build... " && echo
+print_cyan "Running software into package root for \$name \$version... " && echo
 
 pushd \$SRC_DIR >/dev/null
 EOF
@@ -939,10 +939,10 @@ EOF
     cat << EOF >> $install_script
     retval=\$?
     if [[ \$retval -eq 0 ]]; then
-        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Install status (\$name \$version)... " && print_green "OK" && echo
     else
-        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
-        print_error "ERROR: Test suite for \$name failed! See previous output to determine the problem. Exiting" && \
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Install status (\$name \$version)... " && print_green "FAILED" && echo
+        print_error "ERROR: Install of \$name into destroot failed! See previous output to determine the problem. Exiting" && \
             echo
         exit \$retval
     fi
