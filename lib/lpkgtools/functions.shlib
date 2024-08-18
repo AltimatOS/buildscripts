@@ -271,7 +271,7 @@ function unpack {
     local blueprint=${blueprint}
     local sources=${SOURCES}
 
-    declare -a archives=$(get_srcs $blueprint)
+    declare -a archives=$(get_build_srcs $blueprint)
 
     local target=
     local OPTSTRTRING=":s:"
