@@ -810,9 +810,9 @@ EOF
     cat << EOF >> $build_script
     retval=\$?
     if [[ \$retval -eq 0 ]]; then
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "OK" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "OK" && echo
     else
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "FAILED" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Build status (\$name \$version)... " && print_green "FAILED" && echo
         print_error "ERROR: Configuration of sources failed! See previous output to determine the problem. Exiting" && \
             echo
         exit \$retval
@@ -828,8 +828,8 @@ function generate_check_script {
     local file=${1}
 
     local bld_stage="check"
-    local pkgname=$(get_pkgname $file)
-    local pkgversion=$(get_pkgversion $file)
+    local pkgname=$(get_pkg_name_from_build_metadata $file)
+    local pkgversion=$(get_pkg_version_from_build_metadata $file)
 
     mkdir -p /tmp/lpkg
     local check_script=$(mktemp -p /tmp/lpkg)
@@ -844,11 +844,11 @@ BLDSTAGE=$bld_stage
 source $SCRIPT_LIB_DIR/functions.shlib
 
 blueprint=$file
-name=\$(get_pkgname $file)
-version=\$(get_pkgversion $file)
+name=\$(get_pkg_name_from_build_metadata \$blueprint)
+version=\$(get_pkg_version_from_build_metadata \$blueprint)
 
 print_white "EXECUTING PHASE: check" && echo
-if [[ "$(pwd)" != \$SOURCES ]]; then
+if [[ "\$(pwd)" != \$SOURCES ]]; then
     retval=0
     cd \$SOURCES || retval=\$?
     if [[ \$retval -ne 0 ]]; then
@@ -858,7 +858,7 @@ if [[ "$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval echo \$(get_srcdir $file))
+SRC_DIR=\$(eval echo \$(get_bld_srcdir \$blueprint))
 
 print_cyan "Running software test suite for \$name \$version to check correctness of build... " && echo
 
@@ -869,9 +869,9 @@ EOF
     cat << EOF >> $check_script
     retval=\$?
     if [[ \$retval -eq 0 ]]; then
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
     else
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
         print_error "ERROR: Test suite for \$name failed! See previous output to determine the problem. Exiting" && \
             echo
         exit \$retval
@@ -887,8 +887,8 @@ function generate_install_script {
     local file=${1}
 
     local bld_stage="install"
-    local pkgname=$(get_pkgname $file)
-    local pkgversion=$(get_pkgversion $file)
+    local pkgname=$(get_pkg_name_from_build_metadata $file)
+    local pkgversion=$(get_pkg_version_from_build_metadata $file)
 
     mkdir -p /tmp/lpkg
     local install_script=$(mktemp -p /tmp/lpkg)
@@ -909,11 +909,11 @@ if [[ "\$(id -u)" -eq 0 ]]; then
 fi
 
 blueprint=$file
-name=\$(get_pkgname $file)
-version=\$(get_pkgversion $file)
+name=\$(get_pkgname \$blueprint)
+version=\$(get_pkgversion \$blueprint)
 
 print_white "EXECUTING PHASE: install" && echo
-if [[ "$(pwd)" != \$SOURCES ]]; then
+if [[ "\$(pwd)" != \$SOURCES ]]; then
     retval=0
     cd \$SOURCES || retval=\$?
     if [[ \$retval -ne 0 ]]; then
@@ -923,7 +923,7 @@ if [[ "$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval echo \$(get_srcdir $file))
+SRC_DIR=\$(eval echo \$(get_srcdir \$blueprint))
 
 print_cyan "Running software test suite for \$name \$version to check correctness of build... " && echo
 
@@ -934,9 +934,9 @@ EOF
     cat << EOF >> $install_script
     retval=\$?
     if [[ \$retval -eq 0 ]]; then
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "OK" && echo
     else
-        printf "%-74s" "${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
+        printf "%-74s" "\${SET_FG_COLOR_CYAN}Test suite status (\$name \$version)... " && print_green "FAILED" && echo
         print_error "ERROR: Test suite for \$name failed! See previous output to determine the problem. Exiting" && \
             echo
         exit \$retval
