@@ -436,7 +436,7 @@ function configure32 {
     fi
 
     # get our package name
-    pkgname=$(get_pkgname $blueprint)
+    pkgname=$(get_pkg_name_from_build_metadata $blueprint)
 
     # defaults for 64-bit platforms
     local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
@@ -551,7 +551,7 @@ function configure64 {
     fi
 
     # get our package name
-    pkgname=$(get_pkgname $blueprint)
+    pkgname=$(get_pkg_name_from_build_metadata $blueprint)
 
     # defaults for 64-bit platforms
     local TARGET_FLAGS="x86_64-altimatos-linux-gnu"
