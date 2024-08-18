@@ -687,7 +687,7 @@ declare -a PATCHES
 SOURCE=\$(get_build_srcs \$blueprint)
 
 # get patches
-PATCHES=\$(get_build_patches \$blueprint)
+PATCHES=\$(get_patches \$blueprint)
 
 print_white "EXECUTING PHASE: prep" && echo
 if [[ "\$(pwd)" != \$SOURCES ]]; then
