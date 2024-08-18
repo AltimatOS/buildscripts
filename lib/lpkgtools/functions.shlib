@@ -73,10 +73,23 @@ DB_FILE=$DB_DIR/lpkg.db
 
 # end of defaults
 
-function get_metadata_section {
+function get_build_metadata_section {
     local file=${1}
 
-    cat $file | grep --color=never -v '#' | sed -n '/^PkgMetadata {/,/^}$/p' | tail -n+2 | head -n-1
+    cat $file | grep --color=never -v '#' | sed -n '/^BuildMetadata {/,/^}$/p' | tail -n+2 | head -n-1
+}
+
+function get_pkg_metadata_section {
+    local pkg=${1}
+    local file=${2}
+
+    cat $file | grep --color=never -v '#' | sed -n "/^Pkg\ $pkg {/,/^}$/p" | tail -n+2 | head -n-1
+}
+
+function get_packages {
+    local file=${1}
+
+    get_build_metadata_section $file | yq .PkgsGenerated -o json | jq -r '.[]'
 }
 
 function get_prep_section {
@@ -109,69 +122,85 @@ function get_install_section {
     cat $file | grep -v '#'| sed -n '/^Install {/,/^}$/p' | tail -n+2 | head -n-1
 }
 
-function get_pkgname {
-    local file=${1}
+function get_pkg_name {
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .Name -o json | jq -r
+    get_pkg_metadata_section $pkg $file | yq .Name -o json | jq -r
 }
 
-function get_pkgversion {
+function get_pkg_name_from_build_metadata {
     local file=${1}
 
-    get_metadata_section $file | yq .Version -o json | jq -r
+    get_build_metadata_section $file | yq .Name -o json | jq -r
 }
 
-function get_srcurl {
+function get_pkg_version {
+    local pkg=${1}
+    local file=${2}
+
+    get_pkg_metadata_section $pkg $file | yq .Version -o json | jq -r
+}
+
+function get_pkg_version_from_build_metadata {
     local file=${1}
 
-    local name=$(get_pkgname $file)
-    local version=$(get_pkgversion $file)
-    local url=$(get_metadata_section $file | yq .Url -o json | jq -r)
+    get_build_metadata_section $file | yq .Version -o json | jq -r
+}
+
+function get_bld_srcurl {
+    local file=${1}
+
+    local name=$(get_pkg_name_from_build_metadata $file)
+    local version=$(get_pkg_version_from_build_metadata $file)
+    local url=$(get_build_metadata_section $file | yq .Url -o json | jq -r)
 
     # hackery to get it to substitute the variables used
     eval echo $url
 }
 
-function get_srcs {
+function get_build_srcs {
     local file=${1}
 
-    local name=$(get_pkgname $file)
-    local version=$(get_pkgversion $file)
+    local name=$(get_pkg_name_from_build_metadata $file)
+    local version=$(get_pkg_version_from_build_metadata $file)
 
     local srcs
     typeset -a srcs
 
-    eval echo $(get_metadata_section $file | yq .Sources -o json | jq -r '.[]')
+    eval echo $(get_build_metadata_section $file | yq .Sources -o json | jq -r '.[]')
 }
 
-function get_srcdir {
+function get_bld_srcdir {
     local file=${1}
 
-    get_metadata_section $file | yq .SrcDir -o json | jq -r
+    get_build_metadata_section $file | yq .SrcDir -o json | jq -r
+}
+
+function get_build_requires {
+    local file=${1}
+
+    get_build_metadata_section $file | yq .BuildRequires -o json | jq -r '.[]'
 }
 
 function get_pkg_requires {
-    local file=${1}
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .Requires -o json | jq -r '.[]'
+    get_pkg_metadata_section $pkg $file | yq .Requires -o json | jq -r '.[]'
 }
 
-function get_pkg_bldrequires {
+function get_build_patches {
     local file=${1}
 
-    get_metadata_section $file | yq .BuildRequires -o json | jq -r '.[]'
-}
-
-function get_patches {
-    local file=${1}
-
-    get_metadata_section $file | yq .Patches -o json | jq -r '.[]'
+    get_build_metadata_section $file | yq .Patches -o json | jq -r '.[]'
 }
 
 function get_pkg_epoch {
-    local file=${1}
+    local pkg=${1}
+    local file=${2}
 
-    local _epoch=$(get_metadata_section $file | yq .Epoch -o json | jq -r)
+    local _epoch=$(get_pkg_metadata_section $pkg $file | yq .Epoch -o json | jq -r)
     if [[ "$_epoch" == 'null' ]]; then
         say 0
     else
@@ -179,28 +208,32 @@ function get_pkg_epoch {
     fi
 }
 
-function get_summary {
-    local file=${1}
+function get_pkg_summary {
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .Summary -o json | jq -r
+    get_pkg_metadata_section $pkg $file | yq .Summary -o json | jq -r
 }
 
-function get_license {
-    local file=${1}
+function get_pkg_license {
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .License -o json | jq -r
+    get_pkg_metadata_section $pkg $file | yq .License -o json | jq -r
 }
 
-function get_section {
-    local file=${1}
+function get_pkg_section {
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .Section -o json | jq -r
+    get_pkg_metadata_section $pkg $file | yq .Section -o json | jq -r
 }
 
-function get_description {
-    local file=${1}
+function get_pkg_description {
+    local pkg=${1}
+    local file=${2}
 
-    get_metadata_section $file | yq .Description -o json | jq -r
+    get_pkg_metadata_section $pkg $file | yq .Description -o json | jq -r
 }
 
 function clean {
@@ -624,6 +657,10 @@ function configure64 {
     fi
 }
 
+function make_install {
+    make DESTDIR=$
+}
+
 function generate_prep_script {
     local file=${1}
 
@@ -853,7 +890,7 @@ EOF
 function generate_install_script {
     local file=${1}
 
-    local bld_stage="check"
+    local bld_stage="install"
     local pkgname=$(get_pkgname $file)
     local pkgversion=$(get_pkgversion $file)
 
@@ -879,7 +916,7 @@ blueprint=$file
 name=\$(get_pkgname $file)
 version=\$(get_pkgversion $file)
 
-print_white "EXECUTING PHASE: check" && echo
+print_white "EXECUTING PHASE: install" && echo
 if [[ "$(pwd)" != \$SOURCES ]]; then
     retval=0
     cd \$SOURCES || retval=\$?
