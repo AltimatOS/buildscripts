@@ -704,7 +704,7 @@ if [[ "\$(pwd)" != \$SOURCES ]]; then
 fi
 
 # get our src_dir
-SRC_DIR=\$(eval echo \$(get_srcdir \$blueprint))
+SRC_DIR=\$(eval echo \$(get_bld_srcdir \$blueprint))
 
 # clean up previous directories if they existed
 clean \$SRC_DIR
