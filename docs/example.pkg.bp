@@ -115,7 +115,7 @@ Check {
 }
 
 Install {
-  make_install
+  make_install $name $version
 }
 
 Clean {
