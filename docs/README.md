@@ -17,8 +17,13 @@ or RPM really natively support.
 
 ## Package Format
 
-The package format of LPkg is fairly straight-forward. The basic structure has a header, payload, and footer. The header
-of the source and binary package file format is organized like so:
+The package format of LPkg is fairly straight-forward. The basic structure has a header, payload, and footer.
+
+- The header contains the various bits of metadata for the package
+- The payload contains the content archived in the package
+- The footer of the package contains the GPG signatures for the package
+
+The header of the source and binary package file format is organized like so:
 
 *Figure 1: Header Format for Source and Binary Files:*
 | Position | Section | Description |
@@ -27,8 +32,6 @@ of the source and binary package file format is organized like so:
 | 1 | ToC | The table of contents of the file. This is stored as a base64 encoded JSON string with a null terminator at the end of the section |
 | 2 | Metadata | A base64 encoded JSON representation of the package's metadata with a null terminator at the end of the section |
 | 3 | Checksum | A base64 encoded JSON representation of the SHA512 checksum of the payload content with a null terminator at the end of the section |
-| 4 | Payload | The base64 encoded payload of the package. This is in GNU tar format compressed using the bzip2 compression algorithm. Again like other sections, it is null terminated |
-| 5 | Signature | The GPG signatures used to certify that the package was built by the organisations or people that are trusted to have supplied or built the package |
 
 *Figure 2: Header Format for Meta Packages:*
 | Position | Section | Description |
@@ -36,7 +39,6 @@ of the source and binary package file format is organized like so:
 | 0 | Magic | The "magic number" section of the header. Stored in hexidecimal with a null terminator |
 | 1 | ToC | The table of contents of the file. Far more abridged as there is only the two "content" sections of the file compared to the other formats. Base64 encoded and null terminated |
 | 2 | Metadata | A base64 encoded JSON containing all the metadata required to detail the other packages being required by the meta package |
-| 3 | Signature | The GPG signatures used to certify that the package was built by the organisations or people that are trusted to have supplied or built the package |
 
 *Figure 3: Header Format for Bundle Packages:*
 | Position | Section | Description |
@@ -45,8 +47,6 @@ of the source and binary package file format is organized like so:
 | 1 | ToC | The table of contents of the file. As before, JSON data with base64 encoding and null terminated |
 | 2 | Metadata | A base64 encoded JSON containing the bundle metadata. This does not contain the metadata from the bundled packages in the bundle package |
 | 3 | Checksum | A base64 encoded JSON with the SHA512 checksums of the GNU tar archive payload. Terminated by a null terminator |
-| 4 | Payload | This section contains more than one base64 encoded bundled package bundled in a GNU tar archive. The tar archive is null terminated to denote the end of the payload section |
-| 5 | Signature | The GPG signatures used to certify that the package was built by the organisations or people that are trusted to have supplied or built the package |
 
 *Figure 4: Header Format for Source Packages:*
 | Position | Section | Description |
@@ -55,8 +55,6 @@ of the source and binary package file format is organized like so:
 | 1 | ToC | The table of contents of the file. Again, JSON data in base64 encoding and null terminated |
 | 2 | Metadata | A base64 encoded JSON representing the metadata about the source package. This does not contain the metadata for any to-be-built sub packages that the source package can create. Null terminated |
 | 3 | Checksum | A base64 encoded JSON representation of the checksum of the file. The hash used is SHA512. Terminated with a null terminator |
-| 4 | Payload | This section contains the blueprint file, any patches needed for properly building the package, and any sources needed in a GNU tar bzip2 archive. The section is null terminated to denote the end of the payload section |
-| 5 | Signature | The GPG signatures used to certify that the package was created by the organisations or people that are trusted to have supplied or built the package |
 
 ### Magic Format
 
