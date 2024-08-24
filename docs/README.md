@@ -64,14 +64,18 @@ of the source and binary package file format is organized like so:
 
 ### Magic Format
 
-The Magic section allows tools to determine the type and architecture of the binary file.
+The Magic section allows tools to determine the type and architecture of the binary file. The current magic format in use by LPkg is shown in the table below. The structure of the hexidecimal encoded string is `lpkg:v$VERSION_INT:t$TYPE_ENUM:a$ARCH_ENUM` with colon seperated sections. The leading "lpkg" literal is to clearly denote that this is an archive format for use by LPkgTools and other compatible tools. The `v$VERSION_INT` denotes the version of the file type. The `t$TYPE_ENUM` denotes the type of package, whether binary, meta, bundle, or source. Finally, the `a$ARCH_ENUM` denotes the architecture that the package will install onto.
+
+*Figure 5: Magic Format per Package Type Examples*
+| Hex String | ASCII String | Description |
+| --- | --- | --- |
+| 0x6c706b673a76313a74613a6131 | lpkg:v1:t2:a1 | An LPkg v1 single-payload binary package for the noarch (installable on all architectures) systems |
 
 ### Table of Contents JSON Format
 
 The JSON structure of the table-of-contents is organized like so:
 
-*Figure 5: Table of Contents Keys and Structures:*
-
+*Figure 6: Table of Contents Keys and Structures:*
 | Key | Type | Description |
 | --- | --- | --- |
 | `$schema` | string | JSON schema definition |
@@ -80,8 +84,7 @@ The JSON structure of the table-of-contents is organized like so:
 | `version` | string | The version of the ToC format. Current format is 1.0.0. This uses semver versioning |
 | `sections` | object | The object that holds the ToC data |
 
-*Figure 6: Type Enum*
-
+*Figure 7: Type Enum*
 | Number | Represented Value |
 | --- | --- |
 | 1 | Meta Package |
@@ -89,8 +92,7 @@ The JSON structure of the table-of-contents is organized like so:
 | 3 | Multi-payload bundle package |
 | 4 | Source package |
 
-*Figure 7: Architecture Enum*
-
+*Figure 8: Architecture Enum*
 | Number | Represented Value |
 | --- | --- |
 | 1 | noarch |
@@ -98,16 +100,34 @@ The JSON structure of the table-of-contents is organized like so:
 | 3 | x86_64 |
 | 4 | aarch64 |
 
-*Figure 8: The `sections` Object*
+*Figure 9: The `sections` Object*
+| Key | Type | Mandatory | Description |
+| --- | --- | --- | --- |
+| `metadata` | object | true | The JSON object describing the start and end location of the Metadata section of the file |
+| `checksum` | object | false | The JSON object describing the start and end location of the Checksum section of the file, if it contains one |
+| `payload` | object | false | The JSON object describing the start and end location of the Payload section of the file, if it contains one |
+| `signatures` | object | true | The JSON object describing the start and end location of the Signature section of the file |
 
+*Figure 10: The `metadata` Object*
 | Key | Type | Description |
 | --- | --- | --- |
-| `metadata` | object | The JSON object describing the start and end location of the Metadata section of the file |
-| `checksum` | object | The JSON object describing the start and end location of the Checksum section of the file, if it contains one |
-| `payload` | object | The JSON object describing the start and end location of the Payload section of the file, if it contains one |
-| `signatures` | object | The JSON object describing the start and end location of the Signature section of the file |
+| `start` | integer | Start of the metadata section |
+| `end` | integer | End of the metadata section. This is the byte count before the null terminator |
 
-*Figure 9: The `metadata` Object*
-
+*Figure 11: The `checksum` Object*
 | Key | Type | Description |
 | --- | --- | --- |
+| `start` | integer | Start of the checksum section |
+| `end` | integer | End of the checksum section. This is the byte count before the null terminator |
+
+*Figure 12: The `payload` Object*
+| Key | Type | Description |
+| --- | --- | --- |
+| `start` | integer | Start of the payload section |
+| `end` | integer | End of the payload section. This is the byte count before the null terminator |
+
+*Figure 13: The `signatures` Object*
+| Key | Type | Description |
+| --- | --- | --- |
+| `start` | integer | Start of the signatures section |
+| `end` | integer | End of the signatures section. This is the byte count before the null terminator |
